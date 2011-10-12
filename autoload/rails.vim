@@ -247,6 +247,9 @@ function! s:readable_define_pattern() dict abort
   if self.name() =~# '\.rake$'
     let define .= "\\\|^\\s*\\%(task\\\|file\\)\\s\\+[:'\"]"
   endif
+  if self.name() =~# '/blueprint\.rb$'
+    let define .= "^\%(\h\k*\)\@=\.blueprint"
+  endif
   if self.name() =~# '/schema\.rb$'
     let define .= "\\\|^\\s*create_table\\s\\+[:'\"]"
   endif
@@ -734,6 +737,8 @@ function! s:readable_calculate_file_type() dict abort
     let r = "db-migration"
   elseif f=~ '\<db/schema\.rb$'
     let r = "db-schema"
+  elseif f =~ '<test/blueprints\.rb$'
+    let r = 'test-blueprints'
   elseif f =~ '\<vendor/plugins/.*/recipes/.*\.rb$' || f =~ '\.rake$' || f =~ '\<\%(Rake\|Cap\)file$' || f =~ '\<config/deploy\.rb$'
     let r = "task"
   elseif f =~ '\<log/.*\.log$'
@@ -1714,6 +1719,16 @@ function! s:BufNavCommands()
   command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related RV    :call s:Related('V<bang>',<line1>,<line2>,<count>,<f-args>)
   command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related RT    :call s:Related('T<bang>',<line1>,<line2>,<count>,<f-args>)
   command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related RD    :call s:Related('D<bang>',<line1>,<line2>,<count>,<f-args>)
+
+  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:modelList B :call s:Blueprint('<bang>' ,<line1>,<line2>,<count>,<f-args>)
+endfunction
+
+function! s:Blueprint(cmd,line1,line2,count,...)
+  " if a:count == 0 && a:0 == 0
+  "   return s:Alternate(a:cmd,a:line1,a:line1,a:line1)
+  " else
+  "   return call('s:Alternate',[a:cmd,a:line1,a:line2,a:count]+a:000)
+  " endif
 endfunction
 
 function! s:djump(def)
@@ -2975,7 +2990,7 @@ endfunction
 
 function! s:Related(cmd,line1,line2,count,...)
   if a:count == 0 && a:0 == 0
-    return s:Alternate(a:cmd,a:line1,a:line1,a:line1)
+    return s:Alternate(a:cmd,a:line0,a:line1,a:line1)
   else
     return call('s:Alternate',[a:cmd,a:line1,a:line2,a:count]+a:000)
   endif
